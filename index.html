@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1A0A0F">
+<title>Daniel's Birthday Wine Quest 🍷</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root{--burgundy:#6B1A2A;--gold:#C9A84C;--cream:#F5EDD6;--deep:#1A0A0F;--rose:#D4849A;--sage:#8A9E84;--fog:#B8C9C2;}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{font-size:16px;}
+  body{background-color:var(--deep);color:var(--cream);font-family:'Cormorant Garamond',serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:900;opacity:0.35;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");}
+
+  /* ════════════════════════════
+     INTRO SCREEN
+  ════════════════════════════ */
+  #intro-screen{
+    position:fixed;inset:0;z-index:99999;
+    background:radial-gradient(ellipse 120% 80% at 50% 70%,rgba(107,26,42,0.65) 0%,transparent 70%),
+               radial-gradient(ellipse 60% 40% at 20% 10%,rgba(201,168,76,0.07) 0%,transparent 60%),#0b0407;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    overflow:hidden;transition:opacity 0.7s ease,transform 0.7s ease;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #intro-screen::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);z-index:1;}
+  #intro-screen.hiding{opacity:0;transform:scale(0.93);pointer-events:none;}
+
+  .intro-content{position:relative;z-index:3;text-align:center;width:100%;padding:clamp(12px,4vw,28px);animation:introFadeIn 0.9s ease forwards;}
+  @keyframes introFadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Stars canvas */
+  #star-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+  /* Floating coins */
+  .coin{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--gold);z-index:2;animation:coinFloat var(--cd,3s) ease-in-out infinite var(--cdelay,0s);}
+  @keyframes coinFloat{0%{transform:translateY(0) rotate(0deg);opacity:0.8}50%{transform:translateY(-24px) rotate(180deg);opacity:0.3}100%{transform:translateY(0) rotate(360deg);opacity:0}}
+
+  .intro-ground{position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(180deg,transparent,rgba(107,26,42,0.38));border-top:1.5px solid rgba(201,168,76,0.18);z-index:2;}
+
+  .intro-logo{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(1.7rem,8vw,4.5rem);font-weight:700;
+    color:var(--gold);letter-spacing:0.03em;display:block;line-height:1.1;
+    text-shadow:0 0 36px rgba(201,168,76,0.5),0 4px 0 #6B1A2A,0 8px 0 rgba(107,26,42,0.3);
+    -webkit-text-stroke:1px rgba(107,26,42,0.35);
+    animation:logoPulse 2.2s ease-in-out infinite;
+  }
+  .intro-logo em{font-style:italic;color:var(--rose);}
+  @keyframes logoPulse{0%,100%{text-shadow:0 0 36px rgba(201,168,76,0.5),0 4px 0 #6B1A2A,0 8px 0 rgba(107,26,42,0.3)}50%{text-shadow:0 0 70px rgba(201,168,76,0.9),0 4px 0 #8B2A3A,0 8px 0 rgba(107,26,42,0.5),0 0 90px rgba(212,132,154,0.2)}}
+
+  .intro-tagline{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,2vw,0.62rem);letter-spacing:0.35em;text-transform:uppercase;color:var(--fog);opacity:0.6;margin-top:0.3rem;}
+
+  /* Character stage */
+  .char-stage{
+    display:flex;align-items:flex-end;justify-content:center;
+    gap:clamp(12px,4vw,28px);
+    margin:clamp(1rem,3vh,2rem) auto 0.5rem;
+    position:relative;
+    height:clamp(120px,22vh,170px);
+    width:clamp(260px,80vw,340px);
+  }
+  .char-platform{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:75%;height:12px;background:linear-gradient(180deg,rgba(201,168,76,0.22),rgba(107,26,42,0.42));border-radius:8px;border:1px solid rgba(201,168,76,0.22);box-shadow:0 4px 20px rgba(107,26,42,0.45);}
+
+  /* Daniel dancing */
+  #menu-daniel{cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;animation:danielDance 1.2s ease-in-out infinite;transform-origin:bottom center;touch-action:manipulation;}
+  @keyframes danielDance{
+    0%  {transform:translateY(0) rotate(0deg) scaleX(1);}
+    12% {transform:translateY(-18px) rotate(-8deg) scaleX(1);}
+    24% {transform:translateY(0) rotate(6deg) scaleX(1);}
+    36% {transform:translateY(-22px) rotate(10deg) scaleX(-1);}
+    48% {transform:translateY(0) rotate(-4deg) scaleX(-1);}
+    60% {transform:translateY(-14px) rotate(-10deg) scaleX(-1);}
+    72% {transform:translateY(0) rotate(5deg) scaleX(1);}
+    84% {transform:translateY(-16px) rotate(-3deg) scaleX(1);}
+    100%{transform:translateY(0) rotate(0deg) scaleX(1);}
+  }
+
+  /* JoJo wagging */
+  #menu-jojo{cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;animation:jojoWag 0.9s ease-in-out infinite;transform-origin:bottom center;touch-action:manipulation;}
+  @keyframes jojoWag{0%,100%{transform:rotate(-4deg) translateY(0)}25%{transform:rotate(7deg) translateY(-5px)}50%{transform:rotate(-6deg) translateY(0)}75%{transform:rotate(4deg) translateY(-3px)}}
+
+  .char-nametag{font-family:'DM Mono',monospace;font-size:clamp(0.42rem,1.8vw,0.52rem);letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);background:rgba(26,10,15,0.92);border:1px solid rgba(201,168,76,0.4);padding:2px 8px;border-radius:20px;margin-bottom:5px;white-space:nowrap;}
+
+  /* Responsive SVG scaling */
+  #menu-daniel svg, #menu-jojo svg {
+    width: clamp(52px,13vw,72px);
+    height: auto;
+  }
+
+  /* Start button */
+  .start-btn{
+    display:block;margin:clamp(1rem,3vh,1.8rem) auto 0;
+    font-family:'DM Mono',monospace;font-size:clamp(0.65rem,2.5vw,0.75rem);
+    letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--deep);background:var(--gold);border:none;
+    padding:clamp(10px,2.5vw,13px) clamp(24px,6vw,36px);
+    border-radius:5px;cursor:pointer;touch-action:manipulation;
+    box-shadow:0 5px 0 #6B1A2A,0 8px 20px rgba(201,168,76,0.3);
+    transition:transform 0.1s,box-shadow 0.1s;
+    animation:btnPulse 1.6s ease-in-out infinite;
+    -webkit-appearance:none;
+  }
+  .start-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #6B1A2A;}
+  @keyframes btnPulse{0%,100%{box-shadow:0 5px 0 #6B1A2A,0 8px 20px rgba(201,168,76,0.3)}50%{box-shadow:0 5px 0 #6B1A2A,0 8px 32px rgba(201,168,76,0.6)}}
+
+  .press-hint{font-family:'DM Mono',monospace;font-size:clamp(0.42rem,1.8vw,0.55rem);letter-spacing:0.25em;text-transform:uppercase;color:var(--fog);margin-top:0.7rem;animation:blink 1s step-start infinite;}
+  @keyframes blink{0%,100%{opacity:0.7}50%{opacity:0}}
+  .intro-music-note{font-family:'DM Mono',monospace;font-size:clamp(0.4rem,1.5vw,0.5rem);letter-spacing:0.15em;text-transform:uppercase;color:var(--fog);opacity:0.35;margin-top:0.5rem;}
+
+  /* ════════════════════════════
+     MUSIC BUTTON
+  ════════════════════════════ */
+  #music-btn{
+    position:fixed;top:max(14px,env(safe-area-inset-top));right:14px;z-index:9990;display:none;
+    font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--gold);background:rgba(26,10,15,0.9);border:1px solid rgba(201,168,76,0.3);
+    padding:6px 11px;border-radius:6px;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;
+    min-height:36px;display:none;align-items:center;
+  }
+
+  /* ════════════════════════════
+     HERO
+  ════════════════════════════ */
+  .hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(40px,8vw,60px) clamp(16px,5vw,20px);position:relative;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(107,26,42,0.4) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(201,168,76,0.12) 0%,transparent 60%),var(--deep);}
+  .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+  .vine{font-size:1.6rem;color:var(--gold);opacity:0.55;letter-spacing:0.4rem;animation:breathe 4s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{opacity:0.35}50%{opacity:0.75}}
+  .hero-eyebrow{font-family:'DM Mono',monospace;font-size:clamp(0.55rem,2.2vw,0.7rem);letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin:1.2rem 0 0.8rem;}
+  .hero-title{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,10vw,6.5rem);line-height:1.05;color:var(--cream);text-shadow:0 0 60px rgba(201,168,76,0.2);}
+  .hero-title em{font-style:italic;color:var(--rose);}
+  .hero-sub{font-size:clamp(1rem,3.5vw,1.2rem);font-style:italic;color:var(--fog);margin-top:1rem;max-width:520px;line-height:1.5;padding:0 4px;}
+  .route{display:flex;align-items:center;gap:0.4rem;margin-top:1.6rem;flex-wrap:wrap;justify-content:center;padding:0 8px;}
+  .route-stop{font-family:'DM Mono',monospace;font-size:clamp(0.5rem,1.8vw,0.62rem);letter-spacing:0.1em;text-transform:uppercase;color:var(--cream);background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.22);padding:0.25rem 0.6rem;border-radius:20px;}
+  .route-arrow{color:var(--gold);opacity:0.4;font-size:0.7rem;}
+  .xp-bar-wrap{margin-top:2rem;width:min(320px,88vw);}
+  .xp-label{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:clamp(0.52rem,1.8vw,0.62rem);letter-spacing:0.12em;color:var(--gold);margin-bottom:0.4rem;text-transform:uppercase;}
+  .xp-track{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;border:1px solid rgba(201,168,76,0.18);}
+  .xp-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--burgundy),var(--gold));border-radius:3px;transition:width 0.55s ease;}
+  .scroll-hint{margin-top:2.5rem;font-family:'DM Mono',monospace;font-size:clamp(0.5rem,1.8vw,0.58rem);letter-spacing:0.25em;text-transform:uppercase;color:var(--fog);opacity:0.4;animation:bounce 2s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+  /* ════════════════════════════
+     SCOREBOARD
+  ════════════════════════════ */
+  .scoreboard{max-width:900px;margin:clamp(50px,8vh,80px) auto 0;padding:0 clamp(12px,4vw,20px);}
+  .section-header{text-align:center;margin-bottom:clamp(24px,4vh,36px);}
+  .section-label{font-family:'DM Mono',monospace;font-size:clamp(0.52rem,2vw,0.62rem);letter-spacing:0.35em;text-transform:uppercase;color:var(--gold);opacity:0.7;}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,5vw,2.8rem);color:var(--cream);margin-top:0.3rem;}
+  .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,40vw),1fr));gap:10px;}
+  .score-card{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.14);border-radius:8px;padding:clamp(12px,3vw,18px);text-align:center;}
+  .score-icon{font-size:clamp(1.3rem,4vw,1.7rem);margin-bottom:0.3rem;}
+  .score-val{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,5vw,2.1rem);color:var(--gold);line-height:1;}
+  .score-label{font-family:'DM Mono',monospace;font-size:clamp(0.46rem,1.5vw,0.56rem);letter-spacing:0.15em;text-transform:uppercase;color:var(--fog);margin-top:0.3rem;}
+
+  /* ════════════════════════════
+     QUEST MAP
+  ════════════════════════════ */
+  .quest-map{padding:clamp(50px,8vh,80px) clamp(12px,4vw,20px);max-width:900px;margin:0 auto;}
+  .region{margin-bottom:clamp(50px,8vh,75px);}
+  .region-header{display:flex;align-items:center;gap:0.8rem;margin-bottom:clamp(18px,3vh,26px);padding-bottom:0.9rem;border-bottom:1px solid rgba(201,168,76,0.18);flex-wrap:wrap;}
+  .region-badge{width:clamp(40px,8vw,50px);height:clamp(40px,8vw,50px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(1.1rem,3.5vw,1.4rem);flex-shrink:0;border:2px solid var(--gold);background:rgba(107,26,42,0.4);}
+  .region-meta{flex:1;min-width:0;}
+  .region-name{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,4vw,1.6rem);color:var(--cream);line-height:1.1;}
+  .region-dates{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,1.8vw,0.6rem);letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-top:0.22rem;}
+  .region-xp{font-family:'DM Mono',monospace;font-size:clamp(0.54rem,2vw,0.66rem);color:var(--rose);background:rgba(212,132,154,0.1);border:1px solid rgba(212,132,154,0.28);padding:0.18rem 0.55rem;border-radius:20px;flex-shrink:0;}
+  .day-grid{display:grid;gap:11px;}
+  .day-card{background:rgba(255,255,255,0.025);border:1px solid rgba(201,168,76,0.11);border-radius:10px;overflow:hidden;transition:border-color 0.3s;}
+  @media(hover:hover){.day-card:hover{border-color:rgba(201,168,76,0.3);transform:translateY(-2px);}}
+  .day-top{padding:clamp(12px,2.5vw,16px) clamp(14px,3.5vw,22px);display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .day-number{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,1.8vw,0.56rem);letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);opacity:0.7;padding-top:3px;min-width:40px;flex-shrink:0;}
+  .day-content{flex:1;min-width:0;}
+  .day-title{font-family:'Playfair Display',serif;font-size:clamp(0.95rem,3vw,1.12rem);color:var(--cream);line-height:1.25;}
+  .day-date{font-family:'DM Mono',monospace;font-size:clamp(0.46rem,1.6vw,0.57rem);letter-spacing:0.1em;text-transform:uppercase;color:var(--fog);opacity:0.52;margin-top:0.18rem;}
+  .day-emoji{font-size:clamp(1.1rem,3.5vw,1.35rem);margin-left:auto;flex-shrink:0;padding-left:6px;}
+  .quests{padding:clamp(10px,2.5vw,14px) clamp(14px,3.5vw,22px);display:flex;flex-direction:column;gap:clamp(10px,2vh,13px);}
+  .quest{display:flex;align-items:flex-start;gap:10px;}
+  .quest-checkbox{
+    width:clamp(20px,5vw,22px);height:clamp(20px,5vw,22px);
+    border:1.5px solid var(--gold);border-radius:4px;flex-shrink:0;margin-top:1px;
+    cursor:pointer;touch-action:manipulation;
+    transition:background 0.18s;display:flex;align-items:center;justify-content:center;
+    -webkit-appearance:none;
+  }
+  .quest-checkbox:active{background:rgba(201,168,76,0.25);}
+  .quest-checkbox.checked{background:var(--gold);}
+  .quest-checkbox.checked::after{content:'✓';color:var(--deep);font-size:clamp(0.65rem,2.5vw,0.75rem);font-weight:bold;}
+  .quest-info{flex:1;min-width:0;}
+  .quest-name{font-size:clamp(0.88rem,2.8vw,0.98rem);color:var(--cream);line-height:1.38;}
+  .quest-name.done{text-decoration:line-through;opacity:0.3;color:var(--fog);}
+  .quest-time{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,1.8vw,0.56rem);letter-spacing:0.08em;color:var(--gold);opacity:0.7;margin-bottom:3px;}
+  .quest-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+  .tag{font-family:'DM Mono',monospace;font-size:clamp(0.42rem,1.5vw,0.5rem);letter-spacing:0.06em;text-transform:uppercase;padding:2px 6px;border-radius:20px;}
+  .tag-wine{background:rgba(107,26,42,0.5);color:var(--rose);border:1px solid rgba(212,132,154,0.28);}
+  .tag-food{background:rgba(201,168,76,0.11);color:var(--gold);border:1px solid rgba(201,168,76,0.28);}
+  .tag-activity{background:rgba(138,158,132,0.14);color:var(--sage);border:1px solid rgba(138,158,132,0.28);}
+  .tag-luxury{background:rgba(255,255,255,0.055);color:var(--fog);border:1px solid rgba(184,201,194,0.28);}
+  .tag-birthday{background:rgba(212,132,154,0.17);color:var(--rose);border:1px solid rgba(212,132,154,0.42);}
+  .tag-group{background:rgba(201,168,76,0.07);color:var(--gold);border:1px solid rgba(201,168,76,0.18);opacity:0.85;}
+  .tag-travel{background:rgba(26,10,15,0.55);color:var(--fog);border:1px solid rgba(184,201,194,0.18);}
+  .tag-bbq{background:rgba(180,90,30,0.25);color:#E8A87C;border:1px solid rgba(232,168,124,0.35);}
+  .quest-xp{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,1.8vw,0.56rem);color:var(--gold);opacity:0.6;flex-shrink:0;padding-top:2px;white-space:nowrap;}
+  .achievement{margin:4px clamp(14px,3.5vw,22px) 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+  .achievement-icon{font-size:1.1rem;}
+  .achievement-text{font-family:'DM Mono',monospace;font-size:clamp(0.48rem,1.8vw,0.56rem);letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);line-height:1.6;}
+  .achievement-name{font-size:clamp(0.58rem,2vw,0.7rem);}
+  .region-connector{text-align:center;color:var(--gold);opacity:0.25;font-size:1.2rem;margin:-20px 0 32px;letter-spacing:0.4rem;}
+  .footer{text-align:center;padding:clamp(36px,6vh,50px) 20px clamp(100px,16vh,140px);border-top:1px solid rgba(201,168,76,0.09);font-style:italic;color:var(--fog);font-size:clamp(0.88rem,3vw,1rem);opacity:0.55;}
+
+  /* ════════════════════════════
+     LEVEL COMPLETE
+  ════════════════════════════ */
+  @keyframes levelPop{0%{transform:scale(0) rotate(-5deg);opacity:0}60%{transform:scale(1.1) rotate(2deg);opacity:1}80%{transform:scale(0.97)}100%{transform:scale(1);opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes celebJump{0%,100%{transform:scale(1.7) translateY(0)}30%{transform:scale(1.7) translateY(-26px)}60%{transform:scale(1.7) translateY(-10px)}}
+  @keyframes shimmer{0%,100%{text-shadow:0 0 28px rgba(201,168,76,0.6),0 4px 0 #6B1A2A,0 7px 0 rgba(107,26,42,0.4)}50%{text-shadow:0 0 55px rgba(201,168,76,0.9),0 4px 0 #8B2A3A,0 7px 0 rgba(107,26,42,0.5),0 0 90px rgba(212,132,154,0.3)}}
+
+  #level-overlay{display:none;position:fixed;inset:0;z-index:99998;background:rgba(8,3,6,0.88);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);flex-direction:column;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;padding:20px;}
+  #level-overlay.active{display:flex;}
+  #level-complete-text{font-family:'Playfair Display',serif;font-size:clamp(2rem,9vw,5rem);font-weight:700;letter-spacing:0.07em;color:#C9A84C;text-shadow:0 0 28px rgba(201,168,76,0.6),0 4px 0 #6B1A2A,0 7px 0 rgba(107,26,42,0.4);animation:levelPop 0.55s cubic-bezier(0.175,0.885,0.32,1.275) forwards,shimmer 2s 0.6s ease-in-out infinite;transform:scale(0);display:block;line-height:1.1;-webkit-text-stroke:1px rgba(107,26,42,0.45);}
+  #level-name-text{font-family:'Cormorant Garamond',serif;font-size:clamp(1rem,3.5vw,1.7rem);font-style:italic;color:#F5EDD6;margin-top:0.55rem;opacity:0;animation:fadeUp 0.5s 0.5s forwards;text-align:center;max-width:80vw;}
+  #celeb-char-wrap{margin-top:clamp(1.2rem,3vh,2rem);opacity:0;animation:fadeUp 0.5s 0.7s forwards,celebJump 0.7s 1s ease-in-out infinite;transform:scale(1.7) translateY(0);}
+  #level-tap-hint{font-family:'DM Mono',monospace;font-size:clamp(0.5rem,2vw,0.6rem);letter-spacing:0.22em;text-transform:uppercase;color:#B8C9C2;opacity:0;animation:fadeUp 0.5s 1.4s forwards;margin-top:clamp(1rem,3vh,1.8rem);}
+  #confetti-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+
+  /* ════════════════════════════
+     ROAMING CHARACTER
+  ════════════════════════════ */
+  #daniel-char{position:fixed;bottom:clamp(16px,4vh,24px);z-index:9999;pointer-events:none;user-select:none;display:none;}
+  #char-bubble{
+    position:absolute;bottom:clamp(56px,10vh,72px);left:50%;transform:translateX(-50%);
+    background:rgba(26,10,15,0.95);border:1px solid rgba(201,168,76,0.55);
+    color:#C9A84C;font-family:'DM Mono',monospace;font-size:clamp(0.52rem,2vw,0.62rem);
+    letter-spacing:0.07em;padding:6px 13px;border-radius:10px;white-space:nowrap;
+    opacity:0;transition:opacity 0.3s;pointer-events:none;
+    box-shadow:0 4px 18px rgba(0,0,0,0.55);
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ INTRO SCREEN ══ -->
+<div id="intro-screen">
+  <canvas id="star-canvas"></canvas>
+  <div class="coin" style="left:6%;top:18%;--cd:2.8s;--cdelay:0s;"></div>
+  <div class="coin" style="left:16%;top:52%;--cd:3.3s;--cdelay:0.5s;"></div>
+  <div class="coin" style="left:74%;top:22%;--cd:2.5s;--cdelay:1s;"></div>
+  <div class="coin" style="left:86%;top:58%;--cd:3.1s;--cdelay:0.3s;"></div>
+  <div class="coin" style="left:46%;top:10%;--cd:2.2s;--cdelay:0.8s;"></div>
+  <div class="coin" style="left:58%;top:72%;--cd:3.6s;--cdelay:1.2s;"></div>
+  <div class="intro-ground"></div>
+
+  <div class="intro-content">
+    <span class="intro-logo"><em>Daniel's</em><br>Wine Quest</span>
+    <div class="intro-tagline">April 4 – 10, 2026 · A Birthday Adventure</div>
+
+    <div class="char-stage">
+      <div class="char-platform"></div>
+
+      <!-- DANIEL -->
+      <div id="menu-daniel" onclick="startGame()" role="button" aria-label="Start as Daniel">
+        <div class="char-nametag">⭐ Daniel</div>
+        <svg width="72" height="96" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="24" cy="62" rx="10" ry="3" fill="rgba(0,0,0,0.35)"/>
+          <rect x="15" y="48" width="7" height="12" rx="3" fill="#1a237e"/>
+          <rect x="26" y="48" width="7" height="12" rx="3" fill="#1a237e"/>
+          <rect x="13" y="56" width="9" height="5" rx="2" fill="#222"/>
+          <rect x="26" y="56" width="9" height="5" rx="2" fill="#222"/>
+          <rect x="12" y="28" width="24" height="22" rx="5" fill="#FF7043"/>
+          <rect x="21" y="28" width="6" height="8" rx="2" fill="#BF360C"/>
+          <rect x="12" y="46" width="24" height="4" rx="2" fill="#5D4037"/>
+          <rect x="21" y="46" width="6" height="4" rx="1" fill="#C9A84C"/>
+          <rect x="3" y="18" width="8" height="14" rx="4" fill="#FF7043" transform="rotate(-35 7 20)"/>
+          <rect x="37" y="18" width="8" height="14" rx="4" fill="#FF7043" transform="rotate(35 41 20)"/>
+          <circle cx="5" cy="14" r="4" fill="#8D5524"/>
+          <circle cx="43" cy="14" r="4" fill="#8D5524"/>
+          <g transform="translate(3,10)">
+            <polygon points="0,-7 5,-7 3,0 -3,0" fill="rgba(212,132,154,0.95)" stroke="#C9A84C" stroke-width="0.5"/>
+            <rect x="-0.5" y="0" width="1" height="4" fill="#C9A84C"/>
+            <rect x="-3" y="4" width="6" height="1" rx="0.5" fill="#C9A84C"/>
+          </g>
+          <rect x="20" y="20" width="8" height="10" rx="3" fill="#8D5524"/>
+          <ellipse cx="24" cy="16" rx="13" ry="14" fill="#8D5524"/>
+          <ellipse cx="11" cy="16" rx="3" ry="4" fill="#7A4A1E"/>
+          <ellipse cx="37" cy="16" rx="3" ry="4" fill="#7A4A1E"/>
+          <ellipse cx="24" cy="5" rx="12" ry="6" fill="#1a0a00"/>
+          <ellipse cx="15" cy="7" rx="5" ry="4" fill="#1a0a00"/>
+          <ellipse cx="33" cy="7" rx="5" ry="4" fill="#1a0a00"/>
+          <ellipse cx="19" cy="16" rx="3" ry="3.5" fill="white"/>
+          <ellipse cx="29" cy="16" rx="3" ry="3.5" fill="white"/>
+          <circle cx="19.5" cy="16.5" r="2" fill="#1a0a00"/>
+          <circle cx="29.5" cy="16.5" r="2" fill="#1a0a00"/>
+          <circle cx="20" cy="15.5" r="0.7" fill="white"/>
+          <circle cx="30" cy="15.5" r="0.7" fill="white"/>
+          <path d="M16 12 Q19 10.5 22 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M26 12 Q29 10.5 32 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M17 21 Q24 26 31 21" stroke="#1a0a00" stroke-width="2" fill="rgba(255,210,160,0.2)" stroke-linecap="round"/>
+          <circle cx="24" cy="10" r="1.5" fill="#C9A84C"/>
+          <polygon points="24,0 18,12 30,12" fill="#D4849A" stroke="#C9A84C" stroke-width="0.8"/>
+          <circle cx="24" cy="0" r="2" fill="#C9A84C"/>
+        </svg>
+      </div>
+
+      <!-- JOJO -->
+      <div id="menu-jojo" onclick="startGame()" role="button" aria-label="Start with JoJo">
+        <div class="char-nametag">🐾 JoJo</div>
+        <svg width="68" height="64" viewBox="0 0 68 56" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="34" cy="54" rx="16" ry="4" fill="rgba(0,0,0,0.3)"/>
+          <ellipse cx="34" cy="38" rx="22" ry="14" fill="#D4A060"/>
+          <circle cx="22" cy="34" r="5" fill="#C4904A" opacity="0.5"/>
+          <circle cx="34" cy="30" r="6" fill="#E0B070" opacity="0.4"/>
+          <circle cx="44" cy="35" r="5" fill="#C4904A" opacity="0.5"/>
+          <circle cx="28" cy="42" r="4" fill="#C4904A" opacity="0.4"/>
+          <circle cx="40" cy="43" r="4" fill="#C4904A" opacity="0.4"/>
+          <rect x="16" y="46" width="8" height="10" rx="4" fill="#C4904A"/>
+          <rect x="26" y="48" width="8" height="8" rx="4" fill="#C4904A"/>
+          <rect x="36" y="48" width="8" height="8" rx="4" fill="#C4904A"/>
+          <rect x="46" y="46" width="8" height="10" rx="4" fill="#C4904A"/>
+          <ellipse cx="20" cy="56" rx="5" ry="3" fill="#A0703A"/>
+          <ellipse cx="30" cy="56" rx="5" ry="3" fill="#A0703A"/>
+          <ellipse cx="40" cy="56" rx="5" ry="3" fill="#A0703A"/>
+          <ellipse cx="50" cy="56" rx="5" ry="3" fill="#A0703A"/>
+          <path d="M56,36 Q68,20 62,14" stroke="#C4904A" stroke-width="8" fill="none" stroke-linecap="round"/>
+          <circle cx="62" cy="12" r="6" fill="#D4A060"/>
+          <rect x="26" y="18" width="16" height="12" rx="6" fill="#D4A060"/>
+          <ellipse cx="34" cy="16" rx="18" ry="16" fill="#D4A060"/>
+          <ellipse cx="16" cy="18" rx="8" ry="7" fill="#C4904A" opacity="0.7"/>
+          <ellipse cx="52" cy="18" rx="8" ry="7" fill="#C4904A" opacity="0.7"/>
+          <ellipse cx="14" cy="14" rx="8" ry="12" fill="#B07030" transform="rotate(-15 14 14)"/>
+          <ellipse cx="54" cy="14" rx="8" ry="12" fill="#B07030" transform="rotate(15 54 14)"/>
+          <ellipse cx="24" cy="6" rx="7" ry="6" fill="#E0B070"/>
+          <ellipse cx="34" cy="3" rx="7" ry="5" fill="#E0B070"/>
+          <ellipse cx="44" cy="6" rx="7" ry="6" fill="#E0B070"/>
+          <ellipse cx="26" cy="16" rx="4" ry="4.5" fill="#1a0a00"/>
+          <ellipse cx="42" cy="16" rx="4" ry="4.5" fill="#1a0a00"/>
+          <circle cx="27" cy="14.5" r="1.5" fill="white"/>
+          <circle cx="43" cy="14.5" r="1.5" fill="white"/>
+          <ellipse cx="34" cy="22" rx="4" ry="3" fill="#3a1a0a"/>
+          <path d="M28,24 Q34,30 40,24" stroke="#3a1a0a" stroke-width="1.5" fill="rgba(255,150,120,0.4)" stroke-linecap="round"/>
+          <ellipse cx="34" cy="28" rx="4" ry="3" fill="#FF8080"/>
+          <rect x="20" y="26" width="28" height="5" rx="2.5" fill="#C9A84C"/>
+          <circle cx="34" cy="28" r="2.5" fill="#6B1A2A"/>
+        </svg>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">🍷 START QUEST</button>
+    <div class="press-hint">tap daniel or jojo to begin</div>
+    <div class="intro-music-note">🎵 game music plays when you start</div>
+  </div>
+</div>
+
+<!-- ══ MUSIC BUTTON ══ -->
+<button id="music-btn" onclick="toggleMusic()">🎵 on</button>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="vine">— 🍇 —</div>
+  <p class="hero-eyebrow">April 4 – 10, 2026 · Daniel's Birthday Quest</p>
+  <h1 class="hero-title"><em>Daniel's</em><br>Wine Quest</h1>
+  <p class="hero-sub">Six days of Napa wineries, backyard BBQs, Ritz-Carlton cliffs, Peruvian feasts & San Francisco magic — for the birthday king.</p>
+  <div class="route">
+    <span class="route-stop">✈️ ORD</span><span class="route-arrow">→</span>
+    <span class="route-stop">🍇 Calistoga</span><span class="route-arrow">→</span>
+    <span class="route-stop">🌊 HMB</span><span class="route-arrow">→</span>
+    <span class="route-stop">🌉 SF</span><span class="route-arrow">→</span>
+    <span class="route-stop">✈️ Home</span>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-label"><span>Quest XP</span><span id="xp-count">0 / 2,375 XP</span></div>
+    <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+  </div>
+  <p class="scroll-hint">▼ begin the adventure ▼</p>
+</section>
+
+<!-- ══ SCOREBOARD ══ -->
+<section class="scoreboard">
+  <div class="section-header">
+    <p class="section-label">Live Stats</p>
+    <h2 class="section-title">The Quest Board</h2>
+  </div>
+  <div class="score-grid">
+    <div class="score-card"><div class="score-icon">🍷</div><div class="score-val" id="stat-wine">0</div><div class="score-label">Wineries</div></div>
+    <div class="score-card"><div class="score-icon">🍽️</div><div class="score-val" id="stat-food">0</div><div class="score-label">Meals</div></div>
+    <div class="score-card"><div class="score-icon">🎾</div><div class="score-val" id="stat-activity">0</div><div class="score-label">Activities</div></div>
+    <div class="score-card"><div class="score-icon">✨</div><div class="score-val" id="stat-luxury">0</div><div class="score-label">Luxury</div></div>
+    <div class="score-card"><div class="score-icon">🔥</div><div class="score-val" id="stat-bbq">0</div><div class="score-label">BBQ</div></div>
+  </div>
+</section>
+
+<!-- ══ QUEST MAP ══ -->
+<section class="quest-map">
+  <div class="section-header" style="margin-top:40px">
+    <p class="section-label">Your Full Itinerary</p>
+    <h2 class="section-title">The Quest Log</h2>
+  </div>
+
+  <!-- REGION 1 -->
+  <div class="region" data-region="departure" data-quests="4">
+    <div class="region-header">
+      <div class="region-badge">✈️</div>
+      <div class="region-meta"><div class="region-name">Departure Day</div><div class="region-dates">Saturday, April 4 · Chicago → California</div></div>
+      <div class="region-xp">+300 XP</div>
+    </div>
+    <div class="day-grid">
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 04</div><div class="day-content"><div class="day-title">The Adventure Begins</div><div class="day-date">Fly ORD→SFO · Rental car · Calistoga Airbnb · Wit & Wisdom</div></div><div class="day-emoji">🛫</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'travel',75,'departure')"></div><div class="quest-info"><div class="quest-name">Board United UA 2109 — Chicago O'Hare to San Francisco International. The quest is officially airborne. ✈️</div><div class="quest-tags"><span class="tag tag-travel">Flight</span><span class="tag tag-group">Daniel & Tom</span></div></div><div class="quest-xp">+75 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'travel',50,'departure')"></div><div class="quest-info"><div class="quest-name">Pick up the rental car at 500 Beach Street, Suite 120, San Francisco — your chariot all week.</div><div class="quest-tags"><span class="tag tag-travel">Car Rental</span><span class="tag tag-group">Daniel & Tom</span></div></div><div class="quest-xp">+50 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'luxury',75,'departure')"></div><div class="quest-info"><div class="quest-name">Check into the Calistoga Airbnb — 7000 Spencer Lane. Your wine country home base for the first two nights.</div><div class="quest-tags"><span class="tag tag-luxury">Airbnb</span><span class="tag tag-group">Daniel & Tom</span></div></div><div class="quest-xp">+75 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',100,'departure')"></div><div class="quest-info"><div class="quest-name">Welcome group dinner at Wit & Wisdom — 7:00–9:00 PM. The whole crew together on night one. Birthday celebrations officially begin! 🎉</div><div class="quest-time">7:00 PM – 9:00 PM</div><div class="quest-tags"><span class="tag tag-food">Dinner</span><span class="tag tag-group">Big Group</span><span class="tag tag-birthday">🎂 Birthday Kickoff</span></div></div><div class="quest-xp">+100 XP</div></div>
+        </div>
+        <div class="achievement"><span class="achievement-icon">🏆</span><div class="achievement-text"><div>Achievement Unlocked</div><div class="achievement-name">"Wheels Up — The Quest Has Begun"</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="region-connector">· · · 🍇 · · ·</div>
+
+  <!-- REGION 2 -->
+  <div class="region" data-region="calistoga" data-quests="9">
+    <div class="region-header">
+      <div class="region-badge">🍇</div>
+      <div class="region-meta"><div class="region-name">Calistoga, Napa Valley</div><div class="region-dates">April 5–6 · Four Wineries, One BBQ</div></div>
+      <div class="region-xp">+1,025 XP</div>
+    </div>
+    <div class="day-grid">
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 05</div><div class="day-content"><div class="day-title">Wineries by Day, BBQ by Night</div><div class="day-date">Sunday — Croix Estate · Merriam · Backyard BBQ</div></div><div class="day-emoji">🔥</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',50,'calistoga')"></div><div class="quest-info"><div class="quest-name">Breakfast at the Airbnb — fuel up the whole group before the winery marathon.</div><div class="quest-tags"><span class="tag tag-food">Breakfast</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+50 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'wine',175,'calistoga')"></div><div class="quest-info"><div class="quest-name">Tasting at Croix Estate Winery — 11:00 AM. Stunning Napa hilltop estate, incredible Cabernet Sauvignon. First winery of the entire quest!</div><div class="quest-time">11:00 AM – 12:30 PM</div><div class="quest-tags"><span class="tag tag-wine">Winery</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+175 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'wine',175,'calistoga')"></div><div class="quest-info"><div class="quest-name">Tasting at Merriam Vineyards — 1:00 PM. Beautiful family winery with exceptional Merlot and Cabernet. Two wineries in one day!</div><div class="quest-time">1:00 PM – 2:30 PM</div><div class="quest-tags"><span class="tag tag-wine">Winery</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+175 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'bbq',150,'calistoga')"></div><div class="quest-info"><div class="quest-name">Backyard BBQ dinner at the Airbnb — whole group under the Calistoga stars. Grill out, open the bottles you picked up today. 🍖🍷</div><div class="quest-tags"><span class="tag tag-bbq">🔥 BBQ</span><span class="tag tag-group">Big Group</span><span class="tag tag-birthday">🎂 Birthday Vibes</span></div></div><div class="quest-xp">+150 XP</div></div>
+        </div>
+        <div class="achievement"><span class="achievement-icon">🔥</span><div class="achievement-text"><div>Achievement Unlocked</div><div class="achievement-name">"Double Barrel & Backyard Legend"</div></div></div>
+      </div>
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 06</div><div class="day-content"><div class="day-title">Napa Finale + Ritz Arrival</div><div class="day-date">Monday — Mini Model · Chandon · Ashes & Diamonds · The Conservatory</div></div><div class="day-emoji">🥂</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',75,'calistoga')"></div><div class="quest-info"><div class="quest-name">Breakfast at Mini Model with the whole group — beloved local Napa spot. The perfect send-off from wine country.</div><div class="quest-tags"><span class="tag tag-food">Breakfast</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+75 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'wine',175,'calistoga')"></div><div class="quest-info"><div class="quest-name">Sparkling tasting at Chandon — 10:30 AM. California's most iconic sparkling wine house. Bubbles on the terrace. ✨</div><div class="quest-time">10:30 AM</div><div class="quest-tags"><span class="tag tag-wine">Sparkling Wine</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+175 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'wine',175,'calistoga')"></div><div class="quest-info"><div class="quest-name">Tasting at Ashes & Diamonds — 1:00 PM. Mid-century modern winery with boundary-pushing Napa wines. One of the most stylish tasting rooms anywhere.</div><div class="quest-time">1:00 PM</div><div class="quest-tags"><span class="tag tag-wine">Winery</span><span class="tag tag-group">Big Group</span></div></div><div class="quest-xp">+175 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'luxury',100,'calistoga')"></div><div class="quest-info"><div class="quest-name">Check into The Ritz-Carlton, Half Moon Bay — 1 Miramontes Point Rd. Your clifftop palace awaits. 🏰</div><div class="quest-tags"><span class="tag tag-luxury">Ritz-Carlton</span><span class="tag tag-group">Daniel & Tom</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',150,'calistoga')"></div><div class="quest-info"><div class="quest-name">Dinner at The Conservatory, Ritz-Carlton — 6:00 PM. Cliffside fine dining with sweeping ocean views. Just the two of you. 🌊</div><div class="quest-time">6:00 PM</div><div class="quest-tags"><span class="tag tag-food">Fine Dining</span><span class="tag tag-luxury">Ritz-Carlton</span><span class="tag tag-birthday">🎂 Birthday</span></div></div><div class="quest-xp">+150 XP</div></div>
+        </div>
+        <div class="achievement"><span class="achievement-icon">🌊</span><div class="achievement-text"><div>Achievement Unlocked</div><div class="achievement-name">"Cliffside Royalty — Ritz-Carlton Unlocked"</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="region-connector">· · · 🌊 · · ·</div>
+
+  <!-- REGION 3 -->
+  <div class="region" data-region="halfmoonbay" data-quests="6">
+    <div class="region-header">
+      <div class="region-badge">🌊</div>
+      <div class="region-meta"><div class="region-name">Half Moon Bay</div><div class="region-dates">April 7–8 · Ritz-Carlton Indulgence</div></div>
+      <div class="region-xp">+550 XP</div>
+    </div>
+    <div class="day-grid">
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 07</div><div class="day-content"><div class="day-title">The Ultimate Ritz Day</div><div class="day-date">Tuesday — Tennis · Ocean Terrace · Biking · La Costanera</div></div><div class="day-emoji">🎾</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'activity',100,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Tennis at The Colony Club, Ritz-Carlton — 9:30 AM. Morning match with the Pacific Ocean as your backdrop.</div><div class="quest-time">9:30 AM</div><div class="quest-tags"><span class="tag tag-activity">Tennis</span><span class="tag tag-luxury">Ritz-Carlton</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',100,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Lunch at Ocean Terrace, Ritz-Carlton — 11:30 AM. Alfresco cliffside dining with panoramic Pacific views.</div><div class="quest-time">11:30 AM</div><div class="quest-tags"><span class="tag tag-food">Lunch</span><span class="tag tag-luxury">Ritz-Carlton</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'activity',100,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Bike riding at The Colony Club — 2:30 PM. Cruise the coastal trail along the cliffs on Ritz bikes.</div><div class="quest-time">2:30 PM</div><div class="quest-tags"><span class="tag tag-activity">Biking</span><span class="tag tag-luxury">Ritz-Carlton</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',150,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Dinner at La Costanera — 7:00 PM. Acclaimed Peruvian seafood restaurant above the ocean in Montara. One of the most romantic spots on the California coast. 🌹</div><div class="quest-time">7:00 PM</div><div class="quest-tags"><span class="tag tag-food">Peruvian Seafood</span><span class="tag tag-birthday">🎂 Birthday Dinner</span></div></div><div class="quest-xp">+150 XP</div></div>
+        </div>
+        <div class="achievement"><span class="achievement-icon">🎾</span><div class="achievement-text"><div>Achievement Unlocked</div><div class="achievement-name">"The Ritz Triathlon — Tennis, Bike & Dinner"</div></div></div>
+      </div>
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 08</div><div class="day-content"><div class="day-title">Checkout & Into the City</div><div class="day-date">Wednesday — Last Ritz morning · Palace Hotel, San Francisco</div></div><div class="day-emoji">🌉</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',50,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Final breakfast at Half Moon Bay — take your time. One last ocean view before the city takes over.</div><div class="quest-tags"><span class="tag tag-food">Breakfast</span></div></div><div class="quest-xp">+50 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'luxury',100,'halfmoonbay')"></div><div class="quest-info"><div class="quest-name">Check into Palace Hotel, a Luxury Collection Hotel — 2 New Montgomery St, San Francisco. A grand historic landmark.</div><div class="quest-tags"><span class="tag tag-luxury">Palace Hotel</span><span class="tag tag-group">Daniel & Tom</span></div></div><div class="quest-xp">+100 XP</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="region-connector">· · · 🌉 · · ·</div>
+
+  <!-- REGION 4 -->
+  <div class="region" data-region="sf" data-quests="5">
+    <div class="region-header">
+      <div class="region-badge">🌉</div>
+      <div class="region-meta"><div class="region-name">San Francisco</div><div class="region-dates">April 8–10 · The Grand Finale</div></div>
+      <div class="region-xp">+350 XP</div>
+    </div>
+    <div class="day-grid">
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 09</div><div class="day-content"><div class="day-title">San Francisco — Your Playground</div><div class="day-date">Thursday — The city is yours</div></div><div class="day-emoji">🗺️</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'activity',100,'sf')"></div><div class="quest-info"><div class="quest-name">Explore SF — Golden Gate Bridge walk, Ferry Building market, North Beach espresso, Dolores Park, or ferry to Sausalito.</div><div class="quest-tags"><span class="tag tag-activity">City Exploration</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'wine',100,'sf')"></div><div class="quest-info"><div class="quest-name">Wine in the city — Winery Collective (Fisherman's Wharf), SF Wine Society (FiDi), or Eco Terreno (North Beach).</div><div class="quest-tags"><span class="tag tag-wine">City Wine Bar</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'food',100,'sf')"></div><div class="quest-info"><div class="quest-name">Dinner in SF — Atelier Crenn, Gary Danko, Zuni Café, or Flour + Water. Whatever the birthday king desires. 🌹</div><div class="quest-tags"><span class="tag tag-food">Dinner</span><span class="tag tag-birthday">🎂 Birthday Eve</span></div></div><div class="quest-xp">+100 XP</div></div>
+        </div>
+      </div>
+      <div class="day-card">
+        <div class="day-top"><div class="day-number">Apr 10</div><div class="day-content"><div class="day-title">The Grand Finale 👑</div><div class="day-date">Friday — Palace Hotel farewell · Fly home SFO</div></div><div class="day-emoji">🥂</div></div>
+        <div class="quests">
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'luxury',100,'sf')"></div><div class="quest-info"><div class="quest-name">Farewell breakfast at the Palace Hotel's Garden Court — beneath the iconic stained-glass dome. End the quest in style. 👑</div><div class="quest-tags"><span class="tag tag-luxury">Palace Hotel</span><span class="tag tag-birthday">🎂 Birthday Finale</span></div></div><div class="quest-xp">+100 XP</div></div>
+          <div class="quest"><div class="quest-checkbox" onclick="toggleQuest(this,'travel',75,'sf')"></div><div class="quest-info"><div class="quest-name">Return the rental car & fly home from SFO — quest complete. Bags full of wine, hearts full of memories. 🍷</div><div class="quest-tags"><span class="tag tag-travel">Flight Home</span></div></div><div class="quest-xp">+75 XP</div></div>
+        </div>
+        <div class="achievement"><span class="achievement-icon">👑</span><div class="achievement-text"><div>Achievement Unlocked</div><div class="achievement-name">"LEGENDARY — Wine Quest: Complete 🍷"</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  <p>🍷 Happy Birthday, Daniel — here's to every sip, every view, and every perfect moment. 🍷</p>
+  <br>
+  <p style="font-size:clamp(0.55rem,2vw,0.72rem);font-family:'DM Mono',monospace;letter-spacing:0.18em;text-transform:uppercase;margin-top:0.5rem;color:var(--gold);opacity:0.38;">Check off each quest · XP & stats update live</p>
+</div>
+
+<!-- ══ LEVEL COMPLETE OVERLAY ══ -->
+<div id="level-overlay">
+  <canvas id="confetti-canvas"></canvas>
+  <div style="text-align:center;position:relative;z-index:2;padding:clamp(12px,4vw,20px);">
+    <div id="level-complete-text">LEVEL COMPLETE!</div>
+    <div id="level-name-text"></div>
+    <div id="celeb-char-wrap">
+      <svg width="52" height="68" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="24" cy="62" rx="10" ry="3" fill="rgba(0,0,0,0.3)"/>
+        <rect x="15" y="44" width="7" height="12" rx="3" fill="#1a237e"/>
+        <rect x="26" y="44" width="7" height="12" rx="3" fill="#1a237e"/>
+        <rect x="13" y="53" width="9" height="5" rx="2" fill="#222"/>
+        <rect x="26" y="53" width="9" height="5" rx="2" fill="#222"/>
+        <rect x="12" y="28" width="24" height="22" rx="5" fill="#FF7043"/>
+        <rect x="21" y="28" width="6" height="8" rx="2" fill="#BF360C"/>
+        <rect x="12" y="46" width="24" height="4" rx="2" fill="#5D4037"/>
+        <rect x="21" y="46" width="6" height="4" rx="1" fill="#C9A84C"/>
+        <rect x="2" y="14" width="8" height="16" rx="4" fill="#FF7043" transform="rotate(-40 6 14)"/>
+        <rect x="38" y="14" width="8" height="16" rx="4" fill="#FF7043" transform="rotate(40 42 14)"/>
+        <circle cx="4" cy="11" r="4" fill="#8D5524"/>
+        <circle cx="44" cy="11" r="4" fill="#8D5524"/>
+        <g id="celeb-prop-inner"></g>
+        <rect x="20" y="20" width="8" height="10" rx="3" fill="#8D5524"/>
+        <ellipse cx="24" cy="16" rx="13" ry="14" fill="#8D5524"/>
+        <ellipse cx="11" cy="16" rx="3" ry="4" fill="#7A4A1E"/>
+        <ellipse cx="37" cy="16" rx="3" ry="4" fill="#7A4A1E"/>
+        <ellipse cx="24" cy="5" rx="12" ry="6" fill="#1a0a00"/>
+        <ellipse cx="15" cy="7" rx="5" ry="4" fill="#1a0a00"/>
+        <ellipse cx="33" cy="7" rx="5" ry="4" fill="#1a0a00"/>
+        <ellipse cx="19" cy="16" rx="3" ry="3.5" fill="white"/>
+        <ellipse cx="29" cy="16" rx="3" ry="3.5" fill="white"/>
+        <circle cx="19.5" cy="16.5" r="2" fill="#1a0a00"/>
+        <circle cx="29.5" cy="16.5" r="2" fill="#1a0a00"/>
+        <circle cx="20" cy="15.5" r="0.7" fill="white"/>
+        <circle cx="30" cy="15.5" r="0.7" fill="white"/>
+        <path d="M16 12 Q19 10.5 22 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M26 12 Q29 10.5 32 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M18 21 Q24 24 30 21" stroke="#1a0a00" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M18 23 Q24 28 30 23" stroke="#5D2E0C" stroke-width="1.8" fill="rgba(255,220,180,0.3)" stroke-linecap="round"/>
+        <circle cx="24" cy="10" r="1.5" fill="#C9A84C"/>
+      </svg>
+    </div>
+    <div id="level-tap-hint">tap to continue</div>
+  </div>
+</div>
+
+<!-- ══ ROAMING CHARACTER ══ -->
+<div id="daniel-char">
+  <div id="char-bubble"></div>
+  <svg id="char-svg" width="44" height="58" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="24" cy="62" rx="10" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <g><rect id="leg-l" x="15" y="48" width="7" height="12" rx="3" fill="#1a237e"/><rect id="leg-r" x="26" y="48" width="7" height="12" rx="3" fill="#1a237e"/><rect x="13" y="56" width="9" height="5" rx="2" fill="#222"/><rect x="26" y="56" width="9" height="5" rx="2" fill="#222"/></g>
+    <rect x="12" y="28" width="24" height="22" rx="5" fill="#FF7043"/>
+    <rect x="21" y="28" width="6" height="8" rx="2" fill="#BF360C"/>
+    <rect x="12" y="46" width="24" height="4" rx="2" fill="#5D4037"/>
+    <rect x="21" y="46" width="6" height="4" rx="1" fill="#C9A84C"/>
+    <rect id="arm-l" x="4" y="30" width="8" height="14" rx="4" fill="#FF7043"/>
+    <rect id="arm-r" x="36" y="30" width="8" height="14" rx="4" fill="#FF7043"/>
+    <circle cx="8" cy="44" r="4" fill="#8D5524"/>
+    <circle cx="40" cy="44" r="4" fill="#8D5524"/>
+    <g id="wine-glass" transform="translate(38,38)"><polygon points="0,-8 5,-8 3,0 -3,0" fill="rgba(212,132,154,0.9)" stroke="#C9A84C" stroke-width="0.5"/><rect x="-0.5" y="0" width="1" height="5" fill="#C9A84C"/><rect x="-3" y="5" width="6" height="1" rx="0.5" fill="#C9A84C"/></g>
+    <rect x="20" y="20" width="8" height="10" rx="3" fill="#8D5524"/>
+    <ellipse cx="24" cy="16" rx="13" ry="14" fill="#8D5524"/>
+    <ellipse cx="11" cy="16" rx="3" ry="4" fill="#7A4A1E"/><ellipse cx="37" cy="16" rx="3" ry="4" fill="#7A4A1E"/>
+    <ellipse cx="24" cy="5" rx="12" ry="6" fill="#1a0a00"/><ellipse cx="15" cy="7" rx="5" ry="4" fill="#1a0a00"/><ellipse cx="33" cy="7" rx="5" ry="4" fill="#1a0a00"/>
+    <ellipse cx="19" cy="16" rx="3" ry="3.5" fill="white"/><ellipse cx="29" cy="16" rx="3" ry="3.5" fill="white"/>
+    <circle cx="19.5" cy="16.5" r="2" fill="#1a0a00"/><circle cx="29.5" cy="16.5" r="2" fill="#1a0a00"/>
+    <circle cx="20" cy="15.5" r="0.7" fill="white"/><circle cx="30" cy="15.5" r="0.7" fill="white"/>
+    <path d="M16 12 Q19 10.5 22 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M26 12 Q29 10.5 32 12" stroke="#1a0a00" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M18 21 Q24 24 30 21" stroke="#1a0a00" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M20 22.5 Q24 25.5 28 22.5" stroke="#5D2E0C" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <circle cx="24" cy="10" r="1.5" fill="#C9A84C"/>
+  </svg>
+</div>
+
+<script>
+'use strict';
+
+// ═══ STARS ═══
+const sc=document.getElementById('star-canvas'),sctx=sc.getContext('2d');
+function drawStars(){sc.width=window.innerWidth;sc.height=window.innerHeight;for(let i=0;i<100;i++){sctx.beginPath();sctx.arc(Math.random()*sc.width,Math.random()*sc.height,Math.random()*1.4+0.3,0,Math.PI*2);sctx.fillStyle=`rgba(255,255,255,${Math.random()*0.65+0.2})`;sctx.fill();}}
+drawStars();
+
+// ═══ AUDIO ═══
+let audioCtx=null,musicPlaying=false,schedulerTimer=null,barIndex=0,nextBarTime=0;
+const mel=[523.25,659.25,783.99,1046.5,880,783.99,659.25,523.25,587.33,739.99,880,1174.66,1046.5,880,739.99,587.33,659.25,830.61,987.77,1318.5,1174.66,987.77,830.61,659.25,783.99,987.77,1174.66,1567.98,1318.5,1174.66,987.77,783.99];
+const bass=[130.81,130.81,164.81,130.81,146.83,146.83,174.61,146.83,164.81,164.81,196,164.81,174.61,174.61,207.65,174.61];
+const BD=0.14,BL=8*BD;
+function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+function pn(f,t,d,type='square',g=0.07){if(!audioCtx)return;const o=audioCtx.createOscillator(),gn=audioCtx.createGain();o.connect(gn);gn.connect(audioCtx.destination);o.type=type;o.frequency.setValueAtTime(f,t);gn.gain.setValueAtTime(g,t);gn.gain.exponentialRampToValueAtTime(0.001,t+d-0.01);o.start(t);o.stop(t+d);}
+function schedBar(t,bi){const off=(bi*8)%mel.length;for(let i=0;i<8;i++){const nt=t+i*BD;pn(mel[(off+i)%mel.length],nt,BD*0.82,'square',0.055);if(i%2===0)pn(bass[((bi*8+i)/2|0)%bass.length],nt,BD*1.5,'triangle',0.038);if(i%2===1)pn(800,nt,0.035,'sawtooth',0.012);}}
+function scheduler(){while(nextBarTime<audioCtx.currentTime+0.5){schedBar(nextBarTime,barIndex);nextBarTime+=BL;barIndex++;}schedulerTimer=setTimeout(scheduler,100);}
+function startMusic(){initAudio();if(audioCtx.state==='suspended')audioCtx.resume();musicPlaying=true;barIndex=0;nextBarTime=audioCtx.currentTime+0.05;scheduler();document.getElementById('music-btn').textContent='🎵 on';}
+function stopMusic(){clearTimeout(schedulerTimer);musicPlaying=false;if(audioCtx)audioCtx.suspend();document.getElementById('music-btn').textContent='🔇 off';}
+function toggleMusic(){musicPlaying?stopMusic():startMusic();}
+
+// ═══ INTRO → GAME ═══
+function startGame(){
+  startMusic();
+  const intro=document.getElementById('intro-screen');
+  intro.classList.add('hiding');
+  setTimeout(()=>{
+    intro.style.display='none';
+    const dc=document.getElementById('daniel-char');
+    dc.style.display='block';
+    const mb=document.getElementById('music-btn');
+    mb.style.display='flex';
+    setTimeout(()=>showBubble("Let's go, Daniel! 🍷"),600);
+  },750);
+}
+
+// ═══ CONFETTI ═══
+const cvs=document.getElementById('confetti-canvas'),ctx2=cvs.getContext('2d');
+let cp=[],cr=false;
+function launchConfetti(){cvs.width=window.innerWidth;cvs.height=window.innerHeight;cp=[];const cols=['#C9A84C','#D4849A','#F5EDD6','#FF7043','#8A9E84','#fff','#6B1A2A'];for(let i=0;i<180;i++)cp.push({x:Math.random()*cvs.width,y:-10-Math.random()*200,w:6+Math.random()*7,h:3+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)],vx:(Math.random()-0.5)*4,vy:1.8+Math.random()*3.5,rot:Math.random()*360,rv:(Math.random()-0.5)*6});cr=true;animC();}
+function animC(){if(!cr)return;ctx2.clearRect(0,0,cvs.width,cvs.height);let alive=false;cp.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.rv;p.vy+=0.06;if(p.y<cvs.height+20)alive=true;ctx2.save();ctx2.globalAlpha=Math.max(0,1-p.y/cvs.height);ctx2.translate(p.x,p.y);ctx2.rotate(p.rot*Math.PI/180);ctx2.fillStyle=p.c;ctx2.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx2.restore();});if(alive)requestAnimationFrame(animC);else{cr=false;ctx2.clearRect(0,0,cvs.width,cvs.height);}}
+
+// ═══ LEVEL COMPLETE ═══
+const rc={departure:0,calistoga:0,halfmoonbay:0,sf:0};
+const rt={departure:4,calistoga:9,halfmoonbay:6,sf:5};
+const rcmp={departure:false,calistoga:false,halfmoonbay:false,sf:false};
+const rcfg={
+  departure:{sub:'The adventure is officially underway! ✈️',prop:'plane'},
+  calistoga:{sub:'Four wineries conquered. BBQ legend achieved. 🍷',prop:'wine'},
+  halfmoonbay:{sub:'Ritz-Carlton mastered. La Costanera devoured. 🌊',prop:'tennis'},
+  sf:{sub:'Quest complete. You are a legend. 👑',prop:'crown'},
+};
+const ov=document.getElementById('level-overlay');
+
+function showLC(k){
+  const cfg=rcfg[k];
+  document.getElementById('level-name-text').textContent=cfg.sub;
+  const t=document.getElementById('level-complete-text');
+  t.style.animation='none';t.offsetHeight;t.style.animation='';
+  document.getElementById('celeb-prop-inner').innerHTML=getProp(cfg.prop);
+  ov.classList.add('active');launchConfetti();
+  if(audioCtx&&audioCtx.state==='running'){[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>pn(f,audioCtx.currentTime+i*0.11,0.18,'square',0.09));}
+  let done=false;
+  function dismiss(){if(done)return;done=true;ov.classList.remove('active');cr=false;ctx2.clearRect(0,0,cvs.width,cvs.height);ov.removeEventListener('click',dismiss);ov.removeEventListener('touchend',dismiss);}
+  ov.addEventListener('click',dismiss);ov.addEventListener('touchend',dismiss);
+  setTimeout(dismiss,6500);
+}
+function getProp(t){
+  if(t==='wine')return`<g transform="translate(36,20)"><polygon points="0,-10 6,-10 4,0 -4,0" fill="rgba(212,132,154,0.95)" stroke="#C9A84C" stroke-width="0.8"/><rect x="-0.5" y="0" width="1.5" height="7" fill="#C9A84C"/><rect x="-4" y="7" width="9" height="1.5" rx="0.5" fill="#C9A84C"/></g>`;
+  if(t==='plane')return`<g transform="translate(34,26) rotate(-30)"><rect x="-3" y="-1.5" width="14" height="3" rx="1.5" fill="#B8C9C2"/><polygon points="7,-1.5 12,0 7,1.5" fill="#B8C9C2"/><rect x="1" y="-5" width="6" height="3" rx="1" fill="#8A9E84"/></g>`;
+  if(t==='tennis')return`<g transform="translate(34,24)"><circle cx="0" cy="0" r="7" fill="#C9A84C" stroke="#5D4037" stroke-width="1"/><path d="M-7,0 Q0,-4 7,0" stroke="white" stroke-width="1" fill="none"/><path d="M-7,0 Q0,4 7,0" stroke="white" stroke-width="1" fill="none"/></g>`;
+  if(t==='crown')return`<g transform="translate(17,2)"><polygon points="0,10 2,0 7,6 10,0 13,6 18,0 20,10" fill="#C9A84C" stroke="#6B1A2A" stroke-width="0.8"/><rect x="0" y="10" width="20" height="3" rx="1" fill="#C9A84C"/><circle cx="10" cy="4" r="2" fill="#D4849A"/></g>`;
+  return'';
+}
+
+// ═══ QUEST TOGGLE ═══
+const totals={wine:0,food:0,activity:0,luxury:0,travel:0,bbq:0};
+let totalXP=0;const MAX_XP=2375;
+function toggleQuest(cb,type,xp,region){
+  const chk=cb.classList.toggle('checked');
+  const qn=cb.nextElementSibling.querySelector('.quest-name');
+  if(chk){qn.classList.add('done');if(totals[type]!==undefined)totals[type]++;totalXP+=xp;if(region)rc[region]++;}
+  else{qn.classList.remove('done');if(totals[type]!==undefined)totals[type]=Math.max(0,totals[type]-1);totalXP=Math.max(0,totalXP-xp);if(region)rc[region]=Math.max(0,rc[region]-1);if(region)rcmp[region]=false;}
+  document.getElementById('stat-wine').textContent=totals.wine;
+  document.getElementById('stat-food').textContent=totals.food;
+  document.getElementById('stat-activity').textContent=totals.activity;
+  document.getElementById('stat-luxury').textContent=totals.luxury;
+  document.getElementById('stat-bbq').textContent=totals.bbq;
+  const pct=Math.min((totalXP/MAX_XP)*100,100);
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-count').textContent=totalXP.toLocaleString()+' / '+MAX_XP.toLocaleString()+' XP';
+  if(region&&!rcmp[region]&&rc[region]>=rt[region]){rcmp[region]=true;setTimeout(()=>showLC(region),400);showBubble(['LETS GOOO! 🎉','REGION CLEARED! 🏆','LEGENDARY! 👑'][Math.floor(Math.random()*3)]);}
+  else if(chk)showBubble(['Great job! 🍷','Quest done! ✅','Legendary! 👑','Cheers! 🥂','One more down! 🎉'][Math.floor(Math.random()*5)]);
+}
+
+// ═══ ROAMING CHARACTER ═══
+const char=document.getElementById('daniel-char');
+const bubble=document.getElementById('char-bubble');
+const charSvg=document.getElementById('char-svg');
+const armL=document.getElementById('arm-l'),armR=document.getElementById('arm-r');
+const legL=document.getElementById('leg-l'),legR=document.getElementById('leg-r');
+const wg=document.getElementById('wine-glass');
+
+// On mobile: no scroll-based walking; use idle bob + touch drift
+const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||window.innerWidth<600;
+let charX=Math.max(100,window.innerWidth*0.13);
+let targetX=charX,lastScrollY=window.scrollY;
+let walkDir=1,isWalking=false,frameCount=0;
+let bubbleTimeout,quipIndex=0;
+
+const quips=['Let\'s find wine! 🍷','Onwards! 🎉','More tastings please','Ritz, here we come!','This is the way 🍇','Birthday vibes ✨','La Costanera awaits!','I need a BBQ 🔥','Cheers! 🥂','Napa or bust!','JoJo says woof! 🐾','Best trip ever 🎂','Keep scrolling! 👀','Four wineries done!','Ashes & Diamonds next!'];
+function showBubble(text){bubble.textContent=text;bubble.style.opacity='1';clearTimeout(bubbleTimeout);bubbleTimeout=setTimeout(()=>{bubble.style.opacity='0';},2800);}
+
+let quipTimer=null;
+function startQuips(){
+  setTimeout(()=>{if(char.style.display!=='none')showBubble("Let's go, Daniel! 🍷");},600);
+  quipTimer=setInterval(()=>{if(char.style.display!=='none'){showBubble(quips[quipIndex%quips.length]);quipIndex++;}},8000);
+}
+
+// Touch-based drift for mobile
+let touchStartX=0,touchDriftDir=0,touchDrifting=false;
+document.addEventListener('touchstart',e=>{if(char.style.display==='none')return;touchStartX=e.touches[0].clientX;},{ passive:true });
+document.addEventListener('touchmove',e=>{if(char.style.display==='none')return;const dx=e.touches[0].clientX-touchStartX;if(Math.abs(dx)>10){touchDrifting=true;touchDriftDir=dx>0?1:-1;}},{ passive:true });
+document.addEventListener('touchend',()=>{touchDrifting=false;},{passive:true});
+
+function animChar(){
+  frameCount++;
+  const scrollY=window.scrollY;
+  const delta=scrollY-lastScrollY;
+  lastScrollY=scrollY;
+  const minX=90,maxX=window.innerWidth-90;
+  const homeX=Math.max(minX,window.innerWidth*0.13);
+
+  if(isMobile){
+    if(touchDrifting){
+      isWalking=true;walkDir=touchDriftDir;
+      targetX=touchDriftDir>0?Math.min(maxX,charX+2):Math.max(minX,charX-2);
+    }else{isWalking=false;targetX=homeX;}
+  }else{
+    if(Math.abs(delta)>1.5){
+      isWalking=true;walkDir=delta>0?1:-1;
+      targetX=delta>0?Math.min(maxX,charX+Math.abs(delta)*0.4):Math.max(minX,charX-Math.abs(delta)*0.4);
+    }else{isWalking=false;targetX=homeX;}
+  }
+
+  charX+=(targetX-charX)*0.06;
+  char.style.left=Math.round(charX)+'px';
+  charSvg.style.transform=walkDir===-1?'scaleX(-1)':'scaleX(1)';
+
+  if(isWalking){const la=Math.sin(frameCount*0.28)*7;legL.setAttribute('y',48+la);legR.setAttribute('y',48-la);armL.setAttribute('y',30-la*0.5);armR.setAttribute('y',30+la*0.5);}
+  else{const bob=Math.sin(frameCount*0.055)*1.5;legL.setAttribute('y',48+bob);legR.setAttribute('y',48+bob);armL.setAttribute('y',30+bob);armR.setAttribute('y',30+bob);const sw=Math.sin(frameCount*0.09)*3;wg.setAttribute('transform',`translate(38,${38+sw}) rotate(${sw*0.5})`);}
+
+  const bounce=isWalking?Math.abs(Math.sin(frameCount*0.28))*4:0;
+  char.style.bottom=(parseInt(getComputedStyle(char).getPropertyValue('--base-bottom')||'24')+bounce)+'px';
+  requestAnimationFrame(animChar);
+}
+// set base bottom via JS for safe-area awareness
+char.style.setProperty('--base-bottom','24');
+char.style.bottom='24px';
+animChar();
+
+// Expose startGame globally (onclick handlers need it)
+window.startGame=startGame;
+window.toggleMusic=toggleMusic;
+window.toggleQuest=toggleQuest;
+
+// Start quips after game begins (called from startGame)
+const _origStartGame=startGame;
+window.startGame=function(){_origStartGame();startQuips();};
+</script>
+</body>
+</html>
